@@ -1,0 +1,461 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Driver Daily Wage App</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+
+        .overlay {
+            background-color: rgba(255, 255, 255, 0.95);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .panel {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            display: none;
+        }
+
+        .visible {
+            display: block;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #007bff;
+            border: none;
+            padding: 10px 15px;
+            color: white;
+            border-radius: 4px;
+            margin-top: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+            button:hover {
+                background: #0056b3;
+            }
+
+        .menu {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+
+            .menu button {
+                margin-left: 8px;
+            }
+
+        #welcomeMsg {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .summary {
+            margin-top: 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <!-- LOGIN PANEL -->
+        <div class="panel visible" id="loginPanel">
+            <h1>Login</h1>
+            <div class="form-group">
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername" autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" autocomplete="current-password" />
+            </div>
+            <button onclick="login()">Login</button>
+        </div>
+
+        <!-- PROFILE PANEL -->
+        <div class="panel" id="profilePanel">
+            <h1>Setup Profile</h1>
+            <div class="form-group">
+                <label for="profileName">Your Name</label>
+                <input type="text" id="profileName" />
+            </div>
+            <div class="form-group">
+                <label for="profileTransportType">Transport Type</label>
+                <select id="profileTransportType">
+                    <option value="Taxi">Taxi</option>
+                    <option value="Auto">Auto Rickshaw</option>
+                    <option value="Cab">Cab</option>
+                    <option value="Bike">Bike</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="profileCarModel">Car Model</label>
+                <select id="profileCarModel">
+                    <option value="Maruti Swift">Maruti Swift</option>
+                    <option value="Hyundai i20">Hyundai i20</option>
+                    <option value="Honda City">Honda City</option>
+                    <option value="Tata Nexon">Tata Nexon</option>
+                    <option value="Toyota Innova">Toyota Innova</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="profileMileage">Mileage (km/l)</label>
+                <input type="number" id="profileMileage" step="0.1" />
+            </div>
+            <button onclick="saveProfile()">Save Profile</button>
+        </div>
+
+        <!-- MAIN PANEL -->
+        <div class="panel" id="mainPanel">
+            <div class="menu">
+                <button onclick="openProfile()">Profile</button>
+                <button onclick="logout()">Logout</button>
+            </div>
+
+            <div id="welcomeMsg"></div>
+
+            <h2>Add New Trip</h2>
+            <div class="form-group">
+                <label for="tripDate">Date</label>
+                <input type="date" id="tripDate" />
+            </div>
+            <div class="form-group">
+                <label for="tripHours">Hours Worked</label>
+                <input type="number" id="tripHours" step="0.1" />
+            </div>
+            <div class="form-group">
+                <label for="tripExpense">Expense (₹)</label>
+                <input type="number" id="tripExpense" step="0.01" />
+            </div>
+            <button onclick="addTrip()">Add Trip</button>
+
+            <h2>Trips History</h2>
+            <table id="tripsTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Hours</th>
+                        <th>Expense (₹)</th>
+                        <th>Gross Income (₹)</th>
+                        <th>Net Income (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Trips will appear here -->
+                </tbody>
+            </table>
+
+            <div class="summary" id="summary"></div>
+        </div>
+    </div>
+
+    <script>
+        // Background images for cars
+        const carBackgrounds = {
+            "Maruti Swift": "https://images.91wheels.com//assets/b_images/main/models/profile/profile1642740665.jpg",
+            "Hyundai i20": "https://imgd.aeplcdn.com/370x208/n/cw/ec/44779/i20-exterior-right-front-three-quarter-2.jpeg?isig=0",
+            "Honda City": "https://stimg.cardekho.com/images/carexteriorimages/930x620/Honda/City/10542/1691137331393/front-left-side-47.jpg",
+            "Tata Nexon": "https://imgd.aeplcdn.com/664x374/n/cw/ec/143729/nexon-exterior-right-front-three-quarter-7.jpeg",
+            "Toyota Innova": "https://imgd.aeplcdn.com/370x208/n/cw/ec/45175/innova-crysta-exterior-right-front-three-quarter-22.jpeg?isig=0"
+        };
+
+        // Set default username/password if not set yet
+        if (!localStorage.getItem("username")) {
+            localStorage.setItem("username", "admin");
+        }
+        if (!localStorage.getItem("password")) {
+            localStorage.setItem("password", "1234");
+        }
+
+        function login() {
+            const user = document.getElementById("loginUsername").value.trim();
+            const pass = document.getElementById("loginPassword").value.trim();
+
+            if (
+                user === localStorage.getItem("username") &&
+                pass === localStorage.getItem("password")
+            ) {
+                const name = localStorage.getItem("profile_name");
+                if (name) {
+                    loadProfile();
+                    loadTrips();
+                    showPanel("mainPanel");
+                } else {
+                    showPanel("profilePanel");
+                }
+            } else {
+                alert("Invalid login.");
+            }
+        }
+
+        function logout() {
+            showPanel("loginPanel");
+            document.body.style.backgroundImage = "none";
+            clearTripInputs();
+            clearMainInputs();
+            // Clear login fields for next time
+            document.getElementById("loginUsername").value = "";
+            document.getElementById("loginPassword").value = "";
+        }
+
+        function openProfile() {
+            document.getElementById("profileName").value = localStorage.getItem("profile_name") || "";
+            document.getElementById("profileTransportType").value = localStorage.getItem("profile_transport") || "Taxi";
+            document.getElementById("profileCarModel").value = localStorage.getItem("profile_car") || "Maruti Swift";
+            document.getElementById("profileMileage").value = localStorage.getItem("profile_mileage") || "";
+            showPanel("profilePanel");
+        }
+
+        function saveProfile() {
+            const name = document.getElementById("profileName").value.trim();
+            const transport = document.getElementById("profileTransportType").value;
+            const car = document.getElementById("profileCarModel").value;
+            const mileage = document.getElementById("profileMileage").value.trim();
+
+            if (!name || !transport || !car || !mileage) {
+                alert("Please fill all fields.");
+                return;
+            }
+
+            if (isNaN(parseFloat(mileage)) || parseFloat(mileage) <= 0) {
+                alert("Please enter a valid mileage.");
+                return;
+            }
+
+            localStorage.setItem("profile_name", name);
+            localStorage.setItem("profile_transport", transport);
+            localStorage.setItem("profile_car", car);
+            localStorage.setItem("profile_mileage", mileage);
+
+            loadProfile();
+            showPanel("mainPanel");
+        }
+
+        function loadProfile() {
+            const name = localStorage.getItem("profile_name");
+            const car = localStorage.getItem("profile_car");
+            const transport = localStorage.getItem("profile_transport");
+
+            const welcome = `👋 Welcome, <b>${name}</b>! You are driving a <b>${car}</b> (${transport})`;
+            document.getElementById("welcomeMsg").innerHTML = welcome;
+            setBackground(car);
+        }
+
+        function setBackground(car) {
+            const bgUrl = carBackgrounds[car] || "";
+            if (bgUrl) {
+                document.body.style.backgroundImage = `url('${bgUrl}')`;
+            } else {
+                document.body.style.backgroundImage = "none";
+            }
+        }
+
+        function addTrip() {
+            const date = document.getElementById("tripDate").value;
+            const hours = parseFloat(document.getElementById("tripHours").value);
+            const expense = parseFloat(document.getElementById("tripExpense").value);
+
+            if (!date) {
+                alert("Please select a date.");
+                return;
+            }
+            if (isNaN(hours) || hours <= 0) {
+                alert("Please enter valid hours worked.");
+                return;
+            }
+            if (isNaN(expense) || expense < 0) {
+                alert("Please enter a valid expense (0 or more).");
+                return;
+            }
+
+            // Ask for rate per hour for this trip
+            let rate = parseFloat(prompt("Enter your rate (₹ per hour) for this trip:", "100"));
+            if (isNaN(rate) || rate <= 0) {
+                alert("Invalid rate entered.");
+                return;
+            }
+
+            const grossIncome = rate * hours;
+            const netIncome = grossIncome - expense;
+
+            // Load existing trips or empty array
+            let trips = JSON.parse(localStorage.getItem("trips") || "[]");
+
+            trips.push({ date, hours, expense, grossIncome, netIncome });
+
+            localStorage.setItem("trips", JSON.stringify(trips));
+            loadTrips();
+            clearTripInputs();
+        }
+
+        function loadTrips() {
+            let trips = JSON.parse(localStorage.getItem("trips") || "[]");
+            const tbody = document.getElementById("tripsTable").querySelector("tbody");
+            tbody.innerHTML = "";
+
+            let totalTrips = trips.length;
+            let totalHours = 0;
+            let totalExpense = 0;
+            let totalGross = 0;
+            let totalNet = 0;
+
+            trips.forEach(trip => {
+                totalHours += trip.hours;
+                totalExpense += trip.expense;
+                totalGross += trip.grossIncome;
+                totalNet += trip.netIncome;
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+              <td>${trip.date}</td>
+              <td>${trip.hours.toFixed(2)}</td>
+              <td>₹${trip.expense.toFixed(2)}</td>
+              <td>₹${trip.grossIncome.toFixed(2)}</td>
+              <td>₹${trip.netIncome.toFixed(2)}</td>
+            `;
+                tbody.appendChild(tr);
+            });
+
+            // Lifetime profit stored separately or calculated here (sum of net income)
+            let lifetimeProfit = parseFloat(localStorage.getItem("lifetimeProfit") || "0");
+            lifetimeProfit += totalNet;
+            localStorage.setItem("lifetimeProfit", lifetimeProfit.toFixed(2));
+
+            // But since we update lifetimeProfit every loadTrips, it would accumulate multiple times
+            // So better keep lifetimeProfit static and only update on new trip add:
+            // We'll fix that: lifetimeProfit updates only on adding a trip.
+
+            const summaryEl = document.getElementById("summary");
+            summaryEl.innerHTML = `
+            Total Trips: ${totalTrips} | Hours Worked: ${totalHours.toFixed(2)} | Expense: ₹${totalExpense.toFixed(2)}<br/>
+            Gross Income: ₹${totalGross.toFixed(2)} | Net Income: ₹${totalNet.toFixed(2)}<br/>
+            <strong>Lifetime Net Income: ₹${localStorage.getItem("lifetimeProfit") || "0"}</strong>
+          `;
+        }
+
+        // Fix lifetimeProfit calculation: update only on adding trip, not in loadTrips
+        // So, modify addTrip to update lifetimeProfit once per new trip
+
+        function clearTripInputs() {
+            document.getElementById("tripDate").value = "";
+            document.getElementById("tripHours").value = "";
+            document.getElementById("tripExpense").value = "";
+        }
+
+        function clearMainInputs() {
+            document.getElementById("welcomeMsg").innerHTML = "";
+            document.getElementById("tripsTable").querySelector("tbody").innerHTML = "";
+            document.getElementById("summary").innerHTML = "";
+        }
+
+        // Modified addTrip to update lifetime profit once per new trip
+        function addTrip() {
+            const date = document.getElementById("tripDate").value;
+            const hours = parseFloat(document.getElementById("tripHours").value);
+            const expense = parseFloat(document.getElementById("tripExpense").value);
+
+            if (!date) {
+                alert("Please select a date.");
+                return;
+            }
+            if (isNaN(hours) || hours <= 0) {
+                alert("Please enter valid hours worked.");
+                return;
+            }
+            if (isNaN(expense) || expense < 0) {
+                alert("Please enter a valid expense (0 or more).");
+                return;
+            }
+
+            let rate = parseFloat(prompt("Enter your rate (₹ per hour) for this trip:", "100"));
+            if (isNaN(rate) || rate <= 0) {
+                alert("Invalid rate entered.");
+                return;
+            }
+
+            const grossIncome = rate * hours;
+            const netIncome = grossIncome - expense;
+
+            let trips = JSON.parse(localStorage.getItem("trips") || "[]");
+            trips.push({ date, hours, expense, grossIncome, netIncome });
+            localStorage.setItem("trips", JSON.stringify(trips));
+
+            // Update lifetime profit once per trip
+            let lifetimeProfit = parseFloat(localStorage.getItem("lifetimeProfit") || "0");
+            lifetimeProfit += netIncome;
+            localStorage.setItem("lifetimeProfit", lifetimeProfit.toFixed(2));
+
+            loadTrips();
+            clearTripInputs();
+        }
+
+        function showPanel(panelId) {
+            ["loginPanel", "profilePanel", "mainPanel"].forEach(id => {
+                document.getElementById(id).classList.remove("visible");
+            });
+            document.getElementById(panelId).classList.add("visible");
+        }
+    </script>
+</body>
+</html>
